@@ -21,7 +21,7 @@ void Scene::Draw2D()
 		break;
 	}
 
-	SHADER.m_spriteShader.DrawTex(nullptr);
+	SHADER.m_spriteShader.DrawTex(&m_transitionTex, Math::Rectangle{ 0,0,1280,720 }, m_transitionProgress * 2.0f);
 }
 
 void Scene::Update()

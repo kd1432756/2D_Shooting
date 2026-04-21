@@ -3,7 +3,7 @@
 
 void TitleScene::Init()
 {
-	m_tex.Load("Texture/TitleScene/titleBG.png");
+	m_tex.Load("Texture/TitleScene/bg_title.png");
 }
 
 void TitleScene::Update()
@@ -12,13 +12,10 @@ void TitleScene::Update()
 	{
 		SCENE.RequestSceneChange(SceneName::Game);
 	}
-
-	m_pos = Math::Matrix::CreateTranslation(0, 0, 0);
 }
 
 void TitleScene::Draw()
 {
-	SHADER.m_spriteShader.SetMatrix(m_pos);
 	SHADER.m_spriteShader.DrawTex(&m_tex, Math::Rectangle{ 0,0,1280,720 }, 1.0f);
 }
 

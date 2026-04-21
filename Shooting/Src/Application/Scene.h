@@ -14,7 +14,7 @@ protected:
 
 	bool m_isTransitioning;
 	float m_transitionProgress;
-	float TRANSITION_SPEED = 0.01f;
+	float TRANSITION_SPEED = 0.02f;
 
 private:
 

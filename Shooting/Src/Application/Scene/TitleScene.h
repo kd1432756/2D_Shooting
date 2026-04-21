@@ -13,5 +13,4 @@ public:
 
 private:
 	KdTexture m_tex;
-	Math::Matrix m_pos;
 };
