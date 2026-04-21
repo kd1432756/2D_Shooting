@@ -65,6 +65,8 @@ void Scene::Init()
 	currentScene = SceneName::Title;
 
 	m_titleScene = new TitleScene();
+
+	m_transitionTex.Load("Texture/transition.png");
 }
 
 void Scene::Release()
@@ -72,6 +74,8 @@ void Scene::Release()
 	if (m_titleScene != nullptr)delete m_titleScene;
 	if (m_gameScene != nullptr)delete m_gameScene;
 	if (m_resultScene != nullptr)delete m_resultScene;
+
+	m_transitionTex.Release();
 }
 
 void Scene::ImGuiUpdate()

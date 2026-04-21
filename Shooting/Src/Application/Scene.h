@@ -28,6 +28,8 @@ private:
 	GameScene* m_gameScene; // ゲームシーン
 	ResultScene* m_resultScene; // リザルトシーン
 
+	KdTexture m_transitionTex; // トランジション用テクスチャ
+
 public:
 
 	// 初期設定
