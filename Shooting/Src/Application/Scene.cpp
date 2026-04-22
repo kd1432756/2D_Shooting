@@ -71,9 +71,21 @@ void Scene::Init()
 
 void Scene::Release()
 {
-	if (m_titleScene != nullptr)delete m_titleScene;
-	if (m_gameScene != nullptr)delete m_gameScene;
-	if (m_resultScene != nullptr)delete m_resultScene;
+	if (m_titleScene)
+	{
+		delete m_titleScene;
+		m_titleScene = nullptr;
+	}
+	if (m_gameScene)
+	{
+		delete m_gameScene;
+		m_gameScene = nullptr;
+	}
+	if (m_resultScene)
+	{
+		delete m_resultScene;
+		m_resultScene = nullptr;
+	}
 
 	m_transitionTex.Release();
 }

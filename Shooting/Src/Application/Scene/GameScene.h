@@ -12,6 +12,6 @@ public:
     void Release();
 
 private:
-
+    KdTexture m_tex;
 
 };
