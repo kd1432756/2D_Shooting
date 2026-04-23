@@ -46,6 +46,21 @@
     <Filter Include="Src\Application\Scene">
       <UniqueIdentifier>{dcd47865-af6f-44ce-ba4d-79c584b26dca}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\Object">
+      <UniqueIdentifier>{cb2ff524-e3eb-48b2-9f32-be7e2871799d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Object\Player">
+      <UniqueIdentifier>{d6f4edcd-07ad-4f0c-859f-018f6fc6d3ef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Object\Player\Bullet">
+      <UniqueIdentifier>{9014bd85-1cbc-4e85-b7ef-d427c55f0f1c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Object\Enemy">
+      <UniqueIdentifier>{87911c8b-184f-4246-b82e-e699a48a2153}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Object\Enemy\Slime">
+      <UniqueIdentifier>{a24c48cb-2ac0-4721-bfb0-4b440ea78503}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -150,6 +165,21 @@
     <ClInclude Include="Src\Application\Scene\TitleScene.h">
       <Filter>Src\Application\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Object\BaseObject.h">
+      <Filter>Src\Application\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Player\Player.h">
+      <Filter>Src\Application\Object\Player</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Player\Bullet\PlayerBullet.h">
+      <Filter>Src\Application\Object\Player\Bullet</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\Slime\Slime.h">
+      <Filter>Src\Application\Object\Enemy\Slime</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\Enemy.h">
+      <Filter>Src\Application\Object\Enemy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Pch.cpp">
@@ -223,6 +253,21 @@
     </ClCompile>
     <ClCompile Include="Src\Application\Scene\TitleScene.cpp">
       <Filter>Src\Application\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\BaseObject.cpp">
+      <Filter>Src\Application\Object</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Player\Player.cpp">
+      <Filter>Src\Application\Object\Player</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Player\Bullet\PlayerBullet.cpp">
+      <Filter>Src\Application\Object\Player\Bullet</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\Slime\Slime.cpp">
+      <Filter>Src\Application\Object\Enemy\Slime</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\Enemy.cpp">
+      <Filter>Src\Application\Object\Enemy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

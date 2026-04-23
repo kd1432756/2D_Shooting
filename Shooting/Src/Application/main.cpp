@@ -33,7 +33,7 @@ bool Application::Init(int w, int h)
 	//===================================================================
 	// ウィンドウ作成
 	//===================================================================
-	if (m_window.Create(w, h, "DirectX", "Window") == false) {
+	if (m_window.Create(w, h, "2D Shooting", "Window") == false) {
 		MessageBoxA(nullptr, "ウィンドウ作成に失敗", "エラー", MB_OK);
 		return false;
 	}
@@ -247,6 +247,8 @@ void Application::Execute()
 			count = 0;
 		}
 
+		std::string titleBar = "2D Shooting FPS:" + std::to_string(m_fps);
+		SetWindowTextA(m_window.GetWndHandle(), titleBar.c_str());
 	}
 
 	// ゲーム解放

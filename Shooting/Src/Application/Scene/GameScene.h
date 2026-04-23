@@ -1,5 +1,7 @@
 #pragma once
 
+class Player;
+
 class GameScene
 {
 public:
@@ -14,4 +16,5 @@ public:
 private:
     KdTexture m_tex;
 
+	Player* m_player;
 };

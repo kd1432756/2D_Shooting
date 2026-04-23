@@ -16,6 +16,7 @@ void ResultScene::Update()
 
 void ResultScene::Draw()
 {
+	SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
 	SHADER.m_spriteShader.DrawTex(&m_tex, Math::Rectangle{ 0,0,1280,720 }, 1.0f);
 }
 
