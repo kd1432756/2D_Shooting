@@ -6,20 +6,7 @@
 
 void Scene::Draw2D()
 {
-	switch (currentScene)
-	{
-	case SceneName::Title:
-		m_titleScene->Draw();
-		break;
-
-	case SceneName::Game:
-		m_gameScene->Draw();
-		break;
-
-	case SceneName::Result:
-		m_resultScene->Draw();
-		break;
-	}
+	m_nowScene->Draw();
 
 	SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
 	SHADER.m_spriteShader.DrawTex(&m_transitionTex, Math::Rectangle{ 0,0,1280,720 }, m_transitionProgress * 2.0f);
@@ -29,20 +16,7 @@ void Scene::Update()
 {
 	frameCount++;
 
-	switch (currentScene)
-	{
-	case SceneName::Title:
-		m_titleScene->Update();
-		break;
-
-	case SceneName::Game:
-		m_gameScene->Update();
-		break;
-
-	case SceneName::Result:
-		m_resultScene->Update();
-		break;
-	}
+	m_nowScene->Update();
 
 	if(m_isTransitioning)
 	{
@@ -64,29 +38,17 @@ void Scene::Init()
 	m_transitionProgress = 0.0f;
 
 	currentScene = SceneName::Title;
+	nextScene = currentScene;
 
-	m_titleScene = new TitleScene();
+	m_nowScene = new TitleScene();
 
 	m_transitionTex.Load("Texture/transition.png");
 }
 
 void Scene::Release()
 {
-	if (m_titleScene)
-	{
-		delete m_titleScene;
-		m_titleScene = nullptr;
-	}
-	if (m_gameScene)
-	{
-		delete m_gameScene;
-		m_gameScene = nullptr;
-	}
-	if (m_resultScene)
-	{
-		delete m_resultScene;
-		m_resultScene = nullptr;
-	}
+	delete m_nowScene;
+	m_nowScene = nullptr;
 
 	m_transitionTex.Release();
 }
@@ -115,38 +77,22 @@ void Scene::ExecuteSceneChange()
 {
 	if (nextScene == SceneName::None) return;
 
-	switch (currentScene)
-	{
-	case SceneName::Title:
-		delete m_titleScene;
-		m_titleScene = nullptr;
-		break;
-
-	case SceneName::Game:
-		delete m_gameScene;
-		m_gameScene = nullptr;
-		break;
-
-	case SceneName::Result:
-		delete m_resultScene;
-		m_resultScene = nullptr;
-		break;
-	}
+	delete m_nowScene;
 
 	currentScene = nextScene;
 
 	switch (currentScene)
 	{
 	case SceneName::Title:
-		m_titleScene = new TitleScene();			
+		m_nowScene = new TitleScene();			
 		break;
 	
 	case SceneName::Game:
-		m_gameScene = new GameScene();
+		m_nowScene = new GameScene();
 		break;
 	
 	case SceneName::Result:
-		m_resultScene = new ResultScene();
+		m_nowScene = new ResultScene();
 		break;
 	}
 

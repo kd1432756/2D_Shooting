@@ -1,6 +1,8 @@
 #pragma once
 
-class TitleScene
+#include "BaseScene.h"
+
+class TitleScene : public BaseScene
 {
 public:
     TitleScene() { Init(); }  // コンストラクタ
@@ -12,5 +14,6 @@ public:
     void Release();
 
 private:
+
 	KdTexture m_tex;
 };

@@ -7,6 +7,14 @@ class Player : public BaseObject
 {
 public:
 
+	enum class State
+	{
+		Normal,
+		ReadyToShoot,
+		Firing,
+		Cooldown
+	};
+
 	Player() { Init(); }
 	~Player() { Release(); }
 
@@ -15,16 +23,32 @@ public:
 	void Draw();
 	void Release();
 
-	void Shoot();
+	State GetState() const { return m_state; }
 
 private:
 
-	KdTexture m_tex;
+	void Shoot();
+
+	void ShootSpecial();
+
+	bool IsFireingFinished();
+
+	void ChangeState(State newState);
+
+	bool m_isActive;
 	Math::Vector2 m_pos;
+	KdTexture m_tex;
+
 	float m_speed = 3.0f;
+	State m_state = State::Normal;
+	float m_cooldownTimer = 0.0f;
 
 	static const int MAX_BULLETS = 100;
 	PlayerBullet* m_bullets[MAX_BULLETS] = { nullptr };
+
+	static const int MAX_SPECIALBULLETS = 2;
+	PlayerBullet* m_specialBullets[MAX_SPECIALBULLETS] = { nullptr };
+
 	KdTexture m_bulletTex;
 
 	float m_shootCooldown = 0.5f;

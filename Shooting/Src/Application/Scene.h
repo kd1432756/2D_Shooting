@@ -2,9 +2,11 @@
 
 enum class SceneName { Title, Game, Result, None };
 
-class TitleScene;
+/*class TitleScene;
 class GameScene;
-class ResultScene;
+class ResultScene;*/
+
+class BaseScene;
 
 class Scene
 {
@@ -24,9 +26,11 @@ private:
 	// 実際にシーンを切り替え内部処理
 	void ExecuteSceneChange();
 
-	TitleScene* m_titleScene; // タイトルシーン
+	BaseScene* m_nowScene = nullptr; // 現在のシーン
+
+/*	TitleScene* m_titleScene; // タイトルシーン
 	GameScene* m_gameScene; // ゲームシーン
-	ResultScene* m_resultScene; // リザルトシーン
+	ResultScene* m_resultScene; // リザルトシーン*/
 
 	KdTexture m_transitionTex; // トランジション用テクスチャ
 

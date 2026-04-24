@@ -2,6 +2,7 @@
 
 void BaseObject::Init()
 {
+
 }
 
 void BaseObject::Update()

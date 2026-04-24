@@ -3,60 +3,128 @@
 
 void Player::Init()
 {
+	m_isActive = true;
+
 	m_tex.Load("Texture/GameScene/player.png");
 	m_bulletTex.Load("Texture/GameScene/player_bullet.png");
 
 	m_pos = { -500, 0 };
 	m_speed = 3.0f;
+	m_cooldownTimer = 0.0f;
 
-	for (int i = 0; i < MAX_BULLETS; i++)
+	for (auto& bullet : m_bullets)
 	{
-		if (!m_bullets[i])
+		if (!bullet)
 		{
-			m_bullets[i] = new PlayerBullet();
-			m_bullets[i]->SetTexture(&m_bulletTex);
+			bullet = new PlayerBullet();
+			bullet->SetTexture(&m_bulletTex);
+		}
+	}
+
+	for (auto& bullet : m_specialBullets)
+	{
+		if (!bullet)
+		{
+			bullet = new PlayerBullet();
+			bullet->SetTexture(&m_bulletTex);
 		}
 	}
 }
 
 void Player::Update()
 {
-	if (GetAsyncKeyState('A') & 0x8000)
+	switch (m_state)
 	{
-		m_pos.x -= m_speed;
-	}
-	if (GetAsyncKeyState('D') & 0x8000)
-	{
-		m_pos.x += m_speed;
-	}
-	if (GetAsyncKeyState('S') & 0x8000)
-	{
-		m_pos.y -= m_speed;
-	}
-	if (GetAsyncKeyState('W') & 0x8000)
-	{
-		m_pos.y += m_speed;
+	case State::Normal:
+
+		if(GetAsyncKeyState(VK_SHIFT) & 0x8000)
+		{
+			ChangeState(State::ReadyToShoot);
+			break;
+		}
+
+		if (GetAsyncKeyState('A') & 0x8000)
+		{
+			m_pos.x -= m_speed;
+		}
+		if (GetAsyncKeyState('D') & 0x8000)
+		{
+			m_pos.x += m_speed;
+		}
+		if (GetAsyncKeyState('S') & 0x8000)
+		{
+			m_pos.y -= m_speed;
+		}
+		if (GetAsyncKeyState('W') & 0x8000)
+		{
+			m_pos.y += m_speed;
+		}
+
+		if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+		{
+			if (m_shootTimer <= 0.0f)
+			{
+				Shoot();
+				m_shootTimer = m_shootCooldown;
+			}
+		}
+
+		if (m_shootTimer > 0.0f)
+		{
+			m_shootTimer -= 1.0f / 60.0f;
+		}
+
+		break;
+
+	case State::ReadyToShoot:
+		if (!(GetAsyncKeyState(VK_SHIFT) & 0x8000))
+		{
+			ChangeState(State::Cooldown);
+			break;
+		}
+		else if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+		{
+			ChangeState(State::Firing);
+			ShootSpecial();
+		}
+
+		break;
+
+	case State::Firing:
+		//必殺技の処理
+		if(IsFireingFinished())
+		{
+			ChangeState(State::Cooldown);
+		}
+
+		break;
+
+		case State::Cooldown:
+		if (m_cooldownTimer <= 0.0f)
+		{
+			ChangeState(State::Normal);
+		}
+		else
+		{
+			m_cooldownTimer -= 1.0f / 60.0f;
+		}
+
+		break;
 	}
 
-	if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+	for (auto& bullet : m_bullets)
 	{
-		if (m_shootTimer <= 0.0f)
+		if (bullet->IsActive())
 		{
-			Shoot();
-			m_shootTimer = m_shootCooldown;
+			bullet->Update();
 		}
 	}
 
-	if (m_shootTimer > 0.0f)
+	for (auto& bullet : m_specialBullets)
 	{
-		m_shootTimer -= 1.0f / 60.0f;
-	}
-
-	for (int i = 0; i < MAX_BULLETS; i++)
-	{
-		if (m_bullets[i]->IsActive())
+		if (bullet->IsActive())
 		{
-			m_bullets[i]->Update();
+			bullet->Update();
 		}
 	}
 }
@@ -66,11 +134,19 @@ void Player::Draw()
 	SHADER.m_spriteShader.SetMatrix(Math::Matrix::CreateTranslation(m_pos.x, m_pos.y, 0));
 	SHADER.m_spriteShader.DrawTex(&m_tex, Math::Rectangle{ 0, 0, 64, 128 }, 1.0f);
 
-	for (int i = 0; i < MAX_BULLETS; i++)
+	for (auto& bullet : m_bullets)
 	{
-		if(m_bullets[i]->IsActive())
+		if(bullet->IsActive())
 		{
-			m_bullets[i]->Draw();
+			bullet->Draw();
+		}
+	}
+
+	for (auto& bullet : m_specialBullets)
+	{
+		if(bullet->IsActive())
+		{
+			bullet->Draw();
 		}
 	}
 }
@@ -79,25 +155,79 @@ void Player::Release()
 {
 	m_tex.Release();
 
-	for (int i = 0; i < MAX_BULLETS; i++)
+	for (auto& bullet : m_bullets)
 	{
-		if(m_bullets[i])
+		if(bullet)
 		{
-			delete m_bullets[i];
-			m_bullets[i] = nullptr;
+			delete bullet;
+			bullet = nullptr;
+		}
+	}
+
+	for (auto& bullet : m_specialBullets)
+	{
+		if(bullet)
+		{
+			delete bullet;
+			bullet = nullptr;
 		}
 	}
 }
 
 void Player::Shoot()
 {
-	for (int i = 0; i < MAX_BULLETS; i++)
+	for (auto& bullet : m_bullets)
 	{
-		if (m_bullets[i] && !m_bullets[i]->IsActive())
+		if (bullet && !bullet->IsActive())
 		{
-			m_bullets[i]->SetPosition(m_pos);
-			m_bullets[i]->SetActive(true);
+			bullet->SetPosition(m_pos);
+			bullet->SetActive(true);
 			break;
+		}
+	}
+}
+
+void Player::ShootSpecial()
+{
+	for (auto& bullet : m_specialBullets)
+	{
+		if (bullet && !bullet->IsActive())
+		{
+			bullet->SetPosition(m_pos);
+			bullet->SetActive(true);
+			break;
+		}
+	}
+}
+
+bool Player::IsFireingFinished()
+{
+	int aliveCount = 0;
+	for (const auto& bullet : m_specialBullets) {
+		// 必殺技専用の弾タイプかつ、まだ有効なもの
+		if (bullet->IsActive()) {
+			aliveCount++;
+		}
+	}
+
+	// 弾が1つも残っていなければ終了
+	return (aliveCount == 0);
+}
+
+void Player::ChangeState(State newState) 
+{
+	State prevState = m_state; // 前の状態を覚えておく
+	m_state = newState;
+
+	if (newState == State::Cooldown) 
+	{
+		if (prevState == State::Firing) 
+		{
+			m_cooldownTimer = 2.0f; // 撃った後は長い硬直
+		}
+		else 
+		{
+			m_cooldownTimer = 0.5f; // キャンセル時は短い硬直
 		}
 	}
 }
