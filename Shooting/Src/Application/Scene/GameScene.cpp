@@ -1,6 +1,7 @@
 #include "GameScene.h"
 #include "Application/Scene.h"
 #include "Application/Object/Player/Player.h"
+#include "Application/Object/Player/Bullet/PlayerBullet.h"
 #include "Application/Object/Enemy/Slime/Slime.h"
 
 void GameScene::Init()
@@ -11,6 +12,16 @@ void GameScene::Init()
 	m_overlayAlpha = 0.0f;
 
 	m_player = new Player();
+
+	m_bulletTex.Load("Texture/GameScene/player_bullet.png");
+	for (auto& bullet : m_playerBullets)
+	{
+		if (!bullet)
+		{
+			bullet = new PlayerBullet();
+			bullet->SetTexture(&m_bulletTex);
+		}
+	}
 
 	m_slimeTex.Load("Texture/GameScene/slime.png");
 	for (auto& slime : m_slime)
@@ -34,7 +45,7 @@ void GameScene::Update()
 	{
 		for (auto& slime : m_slime)
 		{
-			if (!slime->IsActive())
+			if (slime && !slime->IsActive())
 			{
 				slime->SetActive(true);
 				Math::Vector2 pos = { 500, 0 };
@@ -44,6 +55,8 @@ void GameScene::Update()
 		}
 	}
 
+	m_player->Update();
+
 	if (Player::State::ReadyToShoot == m_player->GetState() || Player::State::Firing == m_player->GetState())
 	{
 		m_isDimmingActive = true;
@@ -51,6 +64,40 @@ void GameScene::Update()
 	else
 	{
 		m_isDimmingActive = false;
+	}
+
+	if (m_player->IsShotRequested())
+	{
+		for (auto& bullet : m_playerBullets)
+		{
+			if (bullet && !bullet->IsActive())
+			{
+				bullet->SetActive(true);
+				Math::Vector2 pos = m_player->GetPos();
+				bullet->SetPosition(pos);
+				bullet->SetAngle(ANGLE_RIGHT);
+				break;
+			}
+		}
+	}
+
+	if (!m_isDimmingActive)
+	{
+		for (auto& bullet : m_playerBullets)
+		{
+			if (bullet && bullet->IsActive())
+			{
+				bullet->Update();
+			}
+		}
+
+		for (auto& slime : m_slime)
+		{
+			if (slime && slime->IsActive())
+			{
+				slime->Update();
+			}
+		}
 	}
 
 	if (m_isDimmingActive) {
@@ -63,16 +110,6 @@ void GameScene::Update()
 		// 大きい方を採用する（＝0.0を下回らないようにする）
 		m_overlayAlpha = std::max(0.0f, m_overlayAlpha - 5.0f * 1.0f / 60.0f);
 	}
-
-	m_player->Update();
-
-	for (auto& slime : m_slime)
-	{
-		if (slime->IsActive())
-		{ 
-			slime->Update();
-		}
-	}
 }
 
 void GameScene::Draw()
@@ -84,9 +121,17 @@ void GameScene::Draw()
 
 	for (auto& slime : m_slime)
 	{
-		if (slime->IsActive())
+		if (slime && slime->IsActive())
 		{
 			slime->Draw();
+		}
+	}
+
+	for (auto& bullet : m_playerBullets)
+	{
+		if (bullet && bullet->IsActive())
+		{
+			bullet->Draw();
 		}
 	}
 
@@ -102,6 +147,15 @@ void GameScene::Release()
 	{
 		delete m_player;
 		m_player = nullptr;
+	}
+
+	for (auto& bullet : m_playerBullets)
+	{
+		if(bullet)
+		{
+			delete bullet;
+			bullet = nullptr;
+		}
 	}
 
 	for (auto& slime : m_slime)

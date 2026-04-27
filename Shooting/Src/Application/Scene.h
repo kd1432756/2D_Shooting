@@ -34,6 +34,9 @@ private:
 
 	KdTexture m_transitionTex; // トランジション用テクスチャ
 
+	static const int WindowWidth = 1280;
+	static const int WindowHeight = 720;
+
 public:
 
 	// 初期設定
@@ -53,6 +56,9 @@ public:
 
 	// シーンの切り替え予約
 	void RequestSceneChange(SceneName next);
+
+	// ウィンドウサイズ取得
+	Math::Vector2 GetWindowHalfSize() { return Math::Vector2(WindowWidth / 2, WindowHeight / 2); }
 
 private:
 

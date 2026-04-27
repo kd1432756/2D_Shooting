@@ -12,15 +12,6 @@ void Player::Init()
 	m_speed = 3.0f;
 	m_cooldownTimer = 0.0f;
 
-	for (auto& bullet : m_bullets)
-	{
-		if (!bullet)
-		{
-			bullet = new PlayerBullet();
-			bullet->SetTexture(&m_bulletTex);
-		}
-	}
-
 	for (auto& bullet : m_specialBullets)
 	{
 		if (!bullet)
@@ -64,7 +55,7 @@ void Player::Update()
 		{
 			if (m_shootTimer <= 0.0f)
 			{
-				Shoot();
+				m_isShotRequested = true;
 				m_shootTimer = m_shootCooldown;
 			}
 		}
@@ -84,8 +75,22 @@ void Player::Update()
 		}
 		else if (GetAsyncKeyState(VK_SPACE) & 0x8000)
 		{
+			m_specialBulletType = SpecialBulletType::TypeA;
+
 			ChangeState(State::Firing);
-			ShootSpecial();
+			switch(m_specialBulletType)
+			{
+			case SpecialBulletType::TypeA:
+				ShootSpecial(0,PlayerBullet::BulletType::Pircing);
+				break;
+			case SpecialBulletType::TypeB:
+				ShootSpecial(SPREAD_ANGLE, PlayerBullet::BulletType::Split);
+				ShootSpecial(-SPREAD_ANGLE, PlayerBullet::BulletType::Split);
+				break;
+			case SpecialBulletType::TypeC:
+				ShootSpecial(0, PlayerBullet::BulletType::Parabola);
+				break;
+			}
 		}
 
 		break;
@@ -94,6 +99,10 @@ void Player::Update()
 		//必殺技の処理
 		if(IsFireingFinished())
 		{
+			m_isMissionSuccess = false;
+			m_isLMissionSuccess = false;
+			m_isRMissionSuccess = false;
+
 			ChangeState(State::Cooldown);
 		}
 
@@ -112,14 +121,6 @@ void Player::Update()
 		break;
 	}
 
-	for (auto& bullet : m_bullets)
-	{
-		if (bullet->IsActive())
-		{
-			bullet->Update();
-		}
-	}
-
 	for (auto& bullet : m_specialBullets)
 	{
 		if (bullet->IsActive())
@@ -134,14 +135,6 @@ void Player::Draw()
 	SHADER.m_spriteShader.SetMatrix(Math::Matrix::CreateTranslation(m_pos.x, m_pos.y, 0));
 	SHADER.m_spriteShader.DrawTex(&m_tex, Math::Rectangle{ 0, 0, 64, 128 }, 1.0f);
 
-	for (auto& bullet : m_bullets)
-	{
-		if(bullet->IsActive())
-		{
-			bullet->Draw();
-		}
-	}
-
 	for (auto& bullet : m_specialBullets)
 	{
 		if(bullet->IsActive())
@@ -155,15 +148,6 @@ void Player::Release()
 {
 	m_tex.Release();
 
-	for (auto& bullet : m_bullets)
-	{
-		if(bullet)
-		{
-			delete bullet;
-			bullet = nullptr;
-		}
-	}
-
 	for (auto& bullet : m_specialBullets)
 	{
 		if(bullet)
@@ -174,27 +158,21 @@ void Player::Release()
 	}
 }
 
-void Player::Shoot()
+bool Player::CheckMissionSuccess()
 {
-	for (auto& bullet : m_bullets)
-	{
-		if (bullet && !bullet->IsActive())
-		{
-			bullet->SetPosition(m_pos);
-			bullet->SetActive(true);
-			break;
-		}
-	}
+	return (m_isMissionSuccess || (m_isLMissionSuccess && m_isRMissionSuccess));
 }
 
-void Player::ShootSpecial()
+void Player::ShootSpecial(float angle, PlayerBullet::BulletType type)
 {
 	for (auto& bullet : m_specialBullets)
 	{
 		if (bullet && !bullet->IsActive())
 		{
-			bullet->SetPosition(m_pos);
 			bullet->SetActive(true);
+			bullet->SetPosition(m_pos);
+			bullet->SetAngle(angle);
+			bullet->SetBulletType(type);
 			break;
 		}
 	}
@@ -210,8 +188,34 @@ bool Player::IsFireingFinished()
 		}
 	}
 
-	// 弾が1つも残っていなければ終了
-	return (aliveCount == 0);
+	if (aliveCount == 0)
+	{
+		for (auto& bullet : m_specialBullets)
+		{
+			switch(bullet->GetMissionSuccess())
+			{
+				case PlayerBullet::SplitSide::Normal:
+					m_isMissionSuccess = true;
+					break;
+				case PlayerBullet::SplitSide::Left:
+					m_isLMissionSuccess = true;
+					break;
+				case PlayerBullet::SplitSide::Right:
+					m_isRMissionSuccess = true;
+					break;
+				default :
+					break;
+			}
+		}
+
+		if (CheckMissionSuccess())
+		{
+			// ミッション成功の処理
+		}
+
+		return true;
+	}
+	return false;
 }
 
 void Player::ChangeState(State newState) 
