@@ -18,7 +18,6 @@ public:
     void Release();
 
 private:
-	const float ANGLE_RIGHT = 0.0f;
 
     KdTexture m_tex;
 

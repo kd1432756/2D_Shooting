@@ -23,7 +23,7 @@ public:
 	~PlayerBullet() { Release(); }
 
 	void Init();
-	void Update();
+	void Update(Math::Vector2& playerPos);
 	void Draw();
 	void Release();
 
@@ -35,10 +35,16 @@ public:
 
 private:
 
-	float m_speed = 15.0f;
-	Math::Vector2 m_rectSize = { 16, 16 };
+	float m_speed = 30.0f;
+	Math::Vector2 m_rectSize = { 16, 5 };
+	float m_size = 2.0f;
 
 	BulletType m_bulletType = BulletType::Pircing;
 
 	int m_killCount = 0;
+
+	const float TARGET_DIST = 700.0f;
+	float m_distance = 0;
+	const float MAX_HEIGHT = 350.0f;
+	Math::Vector2 prevPos;
 };

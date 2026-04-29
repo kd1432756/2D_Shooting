@@ -62,7 +62,6 @@ void Scene::ImGuiUpdate()
 	if (ImGui::Begin("Debug Window"))
 	{
 		ImGui::Text("FPS : %d", APP.m_fps);
-		//ImGui::Text("%s", currentScene);
 	}
 	ImGui::End();
 }

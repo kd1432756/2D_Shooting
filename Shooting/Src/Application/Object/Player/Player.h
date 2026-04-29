@@ -29,6 +29,8 @@ public:
 	void Draw();
 	void Release();
 
+	bool IsAlive() { return m_isAlive; }
+
 	State GetState() const { return m_state; }
 
 	bool IsShotRequested()
@@ -41,10 +43,22 @@ public:
 		return false;
 	}
 
-	void SetMissionSuccess(bool success) { m_isMissionSuccess = success; }
-	void SetMissionSuccess(bool leftSuccess, bool rightSuccess) { m_isLMissionSuccess = leftSuccess; m_isRMissionSuccess = rightSuccess; }
+	void ChangeHP(int amount);
 
 private:
+
+	enum class AnimState
+	{
+		Idle,
+		Run,
+		Attack,
+		HighAttack,
+		LowAttack,
+		Death
+	};
+
+	void AnimUpdate();
+	void ChangeAnimState(AnimState animState);
 
 	void ShootSpecial(float angle, PlayerBullet::BulletType type);
 
@@ -52,10 +66,26 @@ private:
 
 	void ChangeState(State newState);
 
-	bool CheckMissionSuccess();
-
 	KdTexture m_tex;
 
+	bool m_isAlive;
+
+	AnimState m_animState = AnimState::Idle;
+	int m_animIndex = 0;
+	float m_animTimer = 0.0f;
+	float m_animSpeed = 0.1f;
+	const int IDLE_FRAMES = 2;
+	const int RUN_FRAMES = 8;
+	const int ATTACK_FRAMES = 6;
+	const int HIGH_ATTACK_FRAMES = 6;
+	const int LOW_ATTACK_FRAMES = 6;
+	const int DEATH_FRAMES = 10;
+	int m_maxFrames = IDLE_FRAMES;
+
+	bool  m_isAnimShotDone = false;    // 現在のアニメ中で既に弾を出したか
+	bool  m_isSpecialReserved = false; // 必殺技の発射待ちフラグ
+
+	Math::Vector2 m_vec = {};
 	float m_speed = 3.0f;
 	State m_state = State::Normal;
 	float m_cooldownTimer = 0.0f;

@@ -55,9 +55,21 @@ void GameScene::Update()
 		}
 	}
 
+	if (GetAsyncKeyState('2') & 0x8000)
+	{
+		m_player->ChangeHP(1);
+	}
+
+	if (GetAsyncKeyState('3') & 0x8000)
+	{
+		m_player->ChangeHP(-1);
+	}
+
 	m_player->Update();
 
-	if (Player::State::ReadyToShoot == m_player->GetState() || Player::State::Firing == m_player->GetState())
+	if (m_player->GetState() == Player::State::ReadyToShoot ||
+		m_player->GetState() == Player::State::Firing ||
+		!m_player->IsAlive()) // 追加：死亡時も暗転フラグを立てる
 	{
 		m_isDimmingActive = true;
 	}
@@ -66,7 +78,7 @@ void GameScene::Update()
 		m_isDimmingActive = false;
 	}
 
-	if (m_player->IsShotRequested())
+	if (m_player->IsAlive() && m_player->IsShotRequested())
 	{
 		for (auto& bullet : m_playerBullets)
 		{
@@ -75,7 +87,7 @@ void GameScene::Update()
 				bullet->SetActive(true);
 				Math::Vector2 pos = m_player->GetPos();
 				bullet->SetPosition(pos);
-				bullet->SetAngle(ANGLE_RIGHT);
+				bullet->SetAngle(0.0f);
 				break;
 			}
 		}
@@ -87,7 +99,7 @@ void GameScene::Update()
 		{
 			if (bullet && bullet->IsActive())
 			{
-				bullet->Update();
+				bullet->Update(m_player->GetPos());
 			}
 		}
 
@@ -99,11 +111,19 @@ void GameScene::Update()
 			}
 		}
 	}
+	else if (m_player->IsAlive())
+	{
+		// 死亡時
+	}
+	else
+	{
+		// 必殺技時
+	}
 
 	if (m_isDimmingActive) {
 		// 「目標の暗さ(0.7)」と「今の暗さに少し足した値」を比べて、
 		// 小さい方を採用する（＝0.7を超えないようにする）
-		m_overlayAlpha = std::min(0.7f, m_overlayAlpha + 5.0f * 1.0f / 60.0f);
+		m_overlayAlpha = std::min(m_player->IsAlive() ? 0.7f : 1.0f, m_overlayAlpha + 5.0f * 1.0f / 60.0f);
 	}
 	else {
 		// 「0.0」と「今の暗さから少し引いた値」を比べて、
