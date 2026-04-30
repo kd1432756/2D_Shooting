@@ -29,8 +29,6 @@ public:
 	void Draw();
 	void Release();
 
-	bool IsAlive() { return m_isAlive; }
-
 	State GetState() const { return m_state; }
 
 	bool IsShotRequested()
@@ -43,7 +41,15 @@ public:
 		return false;
 	}
 
+	void AddTension(float amount) {
+		m_tensionGauge = std::min(MAX_TENSION, m_tensionGauge + amount);
+	}
+
+	float GetTensionPercent() { return m_tensionGauge / MAX_TENSION; }
+
 	void ChangeHP(int amount);
+
+	int GetHp() { return m_hp; }
 
 private:
 
@@ -68,8 +74,6 @@ private:
 
 	KdTexture m_tex;
 
-	bool m_isAlive;
-
 	AnimState m_animState = AnimState::Idle;
 	int m_animIndex = 0;
 	float m_animTimer = 0.0f;
@@ -89,6 +93,9 @@ private:
 	float m_speed = 3.0f;
 	State m_state = State::Normal;
 	float m_cooldownTimer = 0.0f;
+
+	float m_tensionGauge = 0.0f;
+	const float MAX_TENSION = 100.0f;
 
 	static const int MAX_SPECIALBULLETS = 2;
 	PlayerBullet* m_specialBullets[MAX_SPECIALBULLETS] = { nullptr };

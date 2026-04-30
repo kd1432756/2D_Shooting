@@ -60,6 +60,8 @@ public:
 	// ウィンドウサイズ取得
 	Math::Vector2 GetWindowHalfSize() { return Math::Vector2(WindowWidth / 2, WindowHeight / 2); }
 
+	int GetFrameCount() { return frameCount; }
+
 private:
 
 	Scene() {}

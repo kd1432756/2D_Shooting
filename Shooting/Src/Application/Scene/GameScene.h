@@ -35,4 +35,6 @@ private:
     Slime* m_slime[MAX_SLIMES] = { nullptr };
 	KdTexture m_slimeTex;
 
+    KdTexture m_fireTex;
+    KdTexture m_numberTex;
 };

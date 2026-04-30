@@ -12,6 +12,15 @@ public:
 	void Draw();
 	void Release();
 
+	void ChangeHP(int amount)
+	{
+		m_hp += amount;
+		if (m_hp <= 0)
+		{
+			m_isAlive = false;
+		}
+	}
+
 private:
 
 };
