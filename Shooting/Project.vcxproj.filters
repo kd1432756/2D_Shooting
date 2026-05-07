@@ -61,6 +61,15 @@
     <Filter Include="Src\Application\Object\Enemy\Slime">
       <UniqueIdentifier>{a24c48cb-2ac0-4721-bfb0-4b440ea78503}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\Object\Enemy\SkullWolf">
+      <UniqueIdentifier>{7b9f2032-401e-490b-a39b-a2158aacf887}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Object\Enemy\Phoenix">
+      <UniqueIdentifier>{424a7e67-b8c7-4a25-8035-55e091aa35e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Object\Enemy\Fairy">
+      <UniqueIdentifier>{5a7aadfc-117d-4a50-bfd5-81ef2142c1c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -183,6 +192,21 @@
     <ClInclude Include="Src\Application\Scene\BaseScene.h">
       <Filter>Src\Application\Scene</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Hit.h">
+      <Filter>Src\Application</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\SkullWolf\SkullWolf.h">
+      <Filter>Src\Application\Object\Enemy\SkullWolf</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\EnemyBullet.h">
+      <Filter>Src\Application\Object\Enemy</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\Phoenix\Phoenix.h">
+      <Filter>Src\Application\Object\Enemy\Phoenix</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\Fairy\Fairy.h">
+      <Filter>Src\Application\Object\Enemy\Fairy</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Pch.cpp">
@@ -274,6 +298,21 @@
     </ClCompile>
     <ClCompile Include="Src\Application\Scene\BaseScene.cpp">
       <Filter>Src\Application\Scene</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Hit.cpp">
+      <Filter>Src\Application</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\SkullWolf\SkullWolf.cpp">
+      <Filter>Src\Application\Object\Enemy\SkullWolf</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\EnemyBullet.cpp">
+      <Filter>Src\Application\Object\Enemy</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\Phoenix\Phoenix.cpp">
+      <Filter>Src\Application\Object\Enemy\Phoenix</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\Fairy\Fairy.cpp">
+      <Filter>Src\Application\Object\Enemy\Fairy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

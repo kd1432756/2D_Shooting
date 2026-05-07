@@ -32,6 +32,7 @@ void Scene::Update()
 
 void Scene::Init()
 {
+	srand((unsigned int)time(NULL));
 	frameCount = 0;
 
 	m_isTransitioning = false;

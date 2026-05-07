@@ -28,10 +28,14 @@ public:
 	void Release();
 
 	void SetBulletType(BulletType type) { m_bulletType = type; }
+	BulletType GetBulletType() { return m_bulletType; }
 
 	void IncrementKillCount() { m_killCount++; }
+	void SetKillCount(int amount) { m_killCount = amount; }
 
 	SplitSide GetMissionSuccess();
+
+	bool IsHitActive() { return m_isHitActive; }
 
 private:
 
@@ -47,4 +51,6 @@ private:
 	float m_distance = 0;
 	const float MAX_HEIGHT = 350.0f;
 	Math::Vector2 prevPos;
+
+	bool m_isHitActive = false;
 };

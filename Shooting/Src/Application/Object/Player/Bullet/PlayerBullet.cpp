@@ -24,10 +24,17 @@ void PlayerBullet::Update(Math::Vector2& playerPos)
 
 			m_angleRad = atan2f(dy, dx);
 
-			if (t >= 1.0f)
+			if (m_isHitActive)
 			{
+				m_isHitActive = false;
 				m_isActive = false;
 				m_distance = 0;
+				return;
+			}
+
+			if (t >= 1.0f)
+			{
+				m_isHitActive = true;
 			}
 		}
 	}

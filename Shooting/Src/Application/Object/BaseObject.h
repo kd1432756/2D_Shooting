@@ -24,10 +24,10 @@ public:
 
 protected:
 
-	KdTexture* m_tex;
+	KdTexture* m_tex = nullptr;
 	bool m_isActive = false;
 	bool m_isAlive = false;
-	Math::Vector2 m_pos;
+	Math::Vector2 m_pos = {};
 	float m_angleRad = 0.0f;	
 	int m_hp = 1;
 };

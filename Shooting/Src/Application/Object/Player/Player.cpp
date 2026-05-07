@@ -10,11 +10,11 @@ void Player::Init()
 	m_animState = AnimState::Idle;
 
 	m_tex.Load("Texture/GameScene/player.png");
-	m_bulletTex.Load("Texture/GameScene/player_bullet.png");
+	m_playerBulletTex.Load("Texture/GameScene/player_bullet.png");
 
 	m_pos = { -500, 0 };
 	m_vec = {};
-	m_speed = 3.0f;
+	m_speed = 5.0f;
 	m_animSpeed = 0.1f;
 	m_cooldownTimer = 0.0f;
 	m_shootCooldown = 0.5f;
@@ -24,10 +24,16 @@ void Player::Init()
 		if (!bullet)
 		{
 			bullet = new PlayerBullet();
-			bullet->SetTexture(&m_bulletTex);
+			bullet->SetTexture(&m_playerBulletTex);
 		}
 	}
 
+	switch (rand() % 3)
+	{
+	case 0:		m_specialBulletType = SpecialBulletType::TypeA;	break;
+	case 1:		m_specialBulletType = SpecialBulletType::TypeB;	break;
+	case 2:		m_specialBulletType = SpecialBulletType::TypeC;	break;
+	}
 	m_specialBulletType = SpecialBulletType::TypeC;
 }
 
@@ -39,54 +45,58 @@ void Player::Update()
 	{
 		switch (m_state)
 		{
-		case State::Normal:
+		case State::Normal:		
 
-			if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
+			if (GetAsyncKeyState('X') & 0x8000)
 			{
-				if (GetTensionPercent() == 1)
+				if (GetTensionPercent() >= 1)
 				{
 					ChangeState(State::ReadyToShoot);
 					break;
 				}
 			}
-
-			if (m_animState != AnimState::Attack)
+			
+			if (GetAsyncKeyState(VK_LEFT) & 0x8000)
 			{
-				if (GetAsyncKeyState('A') & 0x8000)
-				{
-					m_vec.x -= m_speed;
-				}
-				if (GetAsyncKeyState('D') & 0x8000)
-				{
-					m_vec.x += m_speed;
-				}
-				if (GetAsyncKeyState('S') & 0x8000)
-				{
-					m_vec.y -= m_speed;
-				}
-				if (GetAsyncKeyState('W') & 0x8000)
-				{
-					m_vec.y += m_speed;
-				}
-
-				m_pos += m_vec;
-				if (m_vec != Math::Vector2{})
-				{
-					if (m_animState == AnimState::Idle) ChangeAnimState(AnimState::Run);
-				}
-				else
-				{
-					if (m_animState == AnimState::Run) ChangeAnimState(AnimState::Idle);
-				}
+				m_vec.x -= 1;
+			}
+			if (GetAsyncKeyState(VK_RIGHT) & 0x8000)
+			{
+				m_vec.x += 1;
+			}
+			if (GetAsyncKeyState(VK_DOWN) & 0x8000)
+			{
+				m_vec.y -= 1;
+			}
+			if (GetAsyncKeyState(VK_UP) & 0x8000)
+			{
+				m_vec.y += 1;
 			}
 
-			if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+			m_vec.Normalize();
+
+			if (GetAsyncKeyState(VK_SHIFT) & 0x8000)
 			{
-				if (m_shootTimer <= 0.0f && m_animState != AnimState::Attack)
+				m_vec *= 0.3f;
+			}
+
+			if (m_vec != Math::Vector2{})
+			{
+				if (m_animState == AnimState::Idle) ChangeAnimState(AnimState::Run);
+			}
+			else
+			{
+				if (m_animState == AnimState::Run) ChangeAnimState(AnimState::Idle);
+			}
+
+			if (GetAsyncKeyState('Z') & 0x8000)
+			{
+				if (m_shootTimer <= 0.0f /* && m_animState != AnimState::Attack*/)
 				{
-						m_isAnimShotDone = false;          // 発射済み解除
-						m_shootTimer = m_shootCooldown;
-						ChangeAnimState(AnimState::Attack);
+					//m_isAnimShotDone = false;
+					m_isShotRequested = true;
+					m_shootTimer = m_shootCooldown;
+					//ChangeAnimState(AnimState::Attack);
 				}
 			}
 
@@ -94,21 +104,31 @@ void Player::Update()
 			{
 				m_shootTimer -= 1.0f / 60.0f;
 			}
-			else if (m_animState == AnimState::Attack) ChangeAnimState(AnimState::Idle);
-			
+
+			//if (m_animState != AnimState::Attack && m_shootTimer <= 0.0f)
+			{
+				m_pos += m_vec * m_speed;
+			}
+
+			if (m_pos.x >= SCENE.GetWindowHalfSize().x - 32)m_pos.x = SCENE.GetWindowHalfSize().x - 32;
+			if (m_pos.x <= -SCENE.GetWindowHalfSize().x + 32)m_pos.x = -SCENE.GetWindowHalfSize().x + 32;
+			if (m_pos.y >= 125)m_pos.y = 125;
+			if (m_pos.y <= -290)m_pos.y = -290;
+
 			break;
 
 		case State::ReadyToShoot:
-			if (!(GetAsyncKeyState(VK_SHIFT) & 0x8000))
+			if (!(GetAsyncKeyState('X') & 0x8000))
 			{
 				ChangeState(State::Cooldown);
 				ChangeAnimState(AnimState::Idle);
 				break;
 			}
-			else if (GetAsyncKeyState(VK_SPACE) & 0x8000)
+			else if (GetAsyncKeyState('Z') & 0x8000)
 			{
 				ChangeState(State::Firing);
-				m_isAnimShotDone = false;
+				m_cutInTimer = 0.0f;    // タイマー開始
+				//m_isAnimShotDone = false;
 				m_isSpecialReserved = true; // 必殺技を予約！
 				switch (m_specialBulletType)
 				{
@@ -128,6 +148,7 @@ void Player::Update()
 
 		case State::Firing:
 			//必殺技の処理
+			m_cutInTimer += 1.0f / 60.0f; // タイマーを進める
 			if (!m_isSpecialReserved)
 			{
 				if (IsFireingFinished())
@@ -138,7 +159,7 @@ void Player::Update()
 
 					ChangeState(State::Cooldown);
 				}
-			}
+			}			
 
 			break;
 
@@ -149,7 +170,7 @@ void Player::Update()
 			}
 			else
 			{
-				m_cooldownTimer -= 1.0f / 60.0f;
+				m_cooldownTimer -= 1.0f / 60.0f + (m_hp * 0.01f);
 			}
 
 			break;
@@ -221,6 +242,33 @@ void Player::Draw()
 		}
 	}
 
+	if (m_state == State::Firing && m_cutInTimer < CUTIN_DURATION) 
+	{
+		float t = m_cutInTimer / CUTIN_DURATION;
+		float cutInX = 600.0f - (t * t * (3 - 2 * t) * 400.0f);
+		float cutInY = 0.0f;
+
+		float alpha = 0.6f;
+		if (t > 0.8f) alpha = 0.6f * (1.0f - (t - 0.8f) / 0.2f);
+
+		Math::Matrix mat =
+			Math::Matrix::CreateScale(16.0f) *
+			Math::Matrix::CreateTranslation(cutInX, cutInY, 0);
+
+		int playerY;
+
+		if (m_specialBulletType != SpecialBulletType::TypeC)
+		{
+			playerY = 4 * 64;
+		}
+		else
+		{
+			playerY = 3 * 64;
+		}
+
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_tex, Math::Rectangle{ 0, playerY, 64, 64 }, alpha);
+	}
 	{
 		int srcX;
 		srcX = m_animIndex * 64;
@@ -229,7 +277,10 @@ void Player::Draw()
 		{
 		case AnimState::Idle:			srcY = 0 * 64; break;
 		case AnimState::Run:			srcY = 1 * 64; break;
-		case AnimState::Attack:			srcY = 2 * 64; break;
+		/*case AnimState::Attack:			//srcY = 1 * 64; break;
+			if (m_vec != Math::Vector2{})	srcY = 1 * 64;
+			else							srcY = 0 * 64;
+											break;*/
 		case AnimState::HighAttack:		srcY = 3 * 64; break;
 		case AnimState::LowAttack:		srcY = 4 * 64; break;
 		case AnimState::Death:			srcY = 5 * 64; break;
@@ -248,6 +299,10 @@ void Player::Draw()
 		{
 			bullet->Draw();
 		}
+	}
+
+	{
+		
 	}
 }
 
@@ -268,6 +323,7 @@ void Player::Release()
 void Player::AnimUpdate()
 {
 	if (m_state == State::ReadyToShoot)return;
+	if (m_state == State::Firing && m_cutInTimer < CUTIN_DURATION)return;
 
 	m_animTimer += 1.0f / 60.0f;
 
@@ -280,10 +336,10 @@ void Player::AnimUpdate()
 	if (!m_isAnimShotDone) {
 
 		// ① 通常攻撃のアニメ コマ目
-		if (m_animState == AnimState::Attack && m_animIndex == 4 && m_animTimer >= m_animSpeed * 0.2f) {
+		/*if (m_animState == AnimState::Attack && m_animIndex == 4 && m_animTimer >= m_animSpeed * 0.2f) {
 			m_isShotRequested = true; // 通常弾発射
 			m_isAnimShotDone = true;
-		}
+		}*/
 
 		// ② 必殺技のアニメ コマ目（High / Low 共通）
 		if ((m_animState == AnimState::HighAttack || m_animState == AnimState::LowAttack)
@@ -305,7 +361,7 @@ void Player::AnimUpdate()
 					break;
 				}
 				m_isSpecialReserved = false; // 予約消化
-				m_isAnimShotDone = true;
+				//m_isAnimShotDone = true;
 			}
 		}
 	}
@@ -319,8 +375,23 @@ void Player::AnimUpdate()
 			return;
 		}
 
+		int aliveCount = 0;
+		for (const auto& bullet : m_specialBullets)
+		{
+			if (bullet->IsActive())
+			{
+				aliveCount++;
+			}
+		}
+
+		if (aliveCount != 0)
+		{
+			m_animIndex = m_maxFrames - 1;
+			return;
+		}
+
 		m_animIndex = 0;
-		m_isAnimShotDone = false; // 次のアニメのためにリセット
+		//m_isAnimShotDone = false; // 次のアニメのためにリセット
 		if (m_animState != AnimState::Idle && m_animState != AnimState::Run) ChangeAnimState(AnimState::Idle);
 	}
 }
@@ -370,6 +441,7 @@ void Player::ShootSpecial(float angle, PlayerBullet::BulletType type)
 			bullet->SetPosition(m_pos);
 			bullet->SetAngle(DirectX::XMConvertToRadians(angle));
 			bullet->SetBulletType(type);
+			bullet->SetKillCount(0);
 			break;
 		}
 	}
@@ -378,9 +450,11 @@ void Player::ShootSpecial(float angle, PlayerBullet::BulletType type)
 bool Player::IsFireingFinished()
 {
 	int aliveCount = 0;
-	for (const auto& bullet : m_specialBullets) {
+	for (const auto& bullet : m_specialBullets) 
+	{
 		// 必殺技専用の弾タイプかつ、まだ有効なもの
-		if (bullet->IsActive()) {
+		if (bullet->IsActive()) 
+		{
 			aliveCount++;
 		}
 	}
@@ -409,6 +483,12 @@ bool Player::IsFireingFinished()
 		{
 			ChangeHP(1);
 			m_tensionGauge = 0.0f;
+			switch (rand() % 3)
+			{
+			case 0:		m_specialBulletType = SpecialBulletType::TypeA;	break;
+			case 1:		m_specialBulletType = SpecialBulletType::TypeB;	break;
+			case 2:		m_specialBulletType = SpecialBulletType::TypeC;	break;
+			}
 		}
 		else
 		{
@@ -445,14 +525,14 @@ void Player::ChangeHP(int amount) {
 	m_hp += amount;
 
 	// --- 最小値・最大値のガード ---
-	if (m_hp < 0) {
+	if (m_hp <= 0) {
 		m_hp = 0;
 		m_isAlive = false;
 		ChangeAnimState(AnimState::Death);
 	}
 
 	// 最大HP（テンションMAX）を5とした場合
-	const int MAX_HP = 5;
+	const int MAX_HP = 9;
 	if (m_hp > MAX_HP) {
 		m_hp = MAX_HP;
 	}
@@ -461,7 +541,7 @@ void Player::ChangeHP(int amount) {
 	// ここに速度更新などを書いておけば、増減どちらでも自動で反映される
 	m_shootCooldown = 0.5f - 0.05f * m_hp;
 	if (m_shootCooldown < 0.1f) m_shootCooldown = 0.1f;
-	m_speed = 3.0f + (m_hp * 0.4f);
+	m_speed = 5.0f + (m_hp * 0.4f) * 2.0f;
 	m_animSpeed = 0.1f - (m_hp * 0.01f);
 	if (m_animSpeed < 0.03f) m_animSpeed = 0.03f; // 速すぎ防止
 }

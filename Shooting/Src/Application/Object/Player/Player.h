@@ -51,6 +51,12 @@ public:
 
 	int GetHp() { return m_hp; }
 
+	PlayerBullet** GetSpecialBullets() { return m_specialBullets; }
+
+	int GetSpecialBulletsMax() { return MAX_SPECIALBULLETS; }
+
+	int GetSpecialBulletType() { return (int)m_specialBulletType; }
+
 private:
 
 	enum class AnimState
@@ -78,7 +84,7 @@ private:
 	int m_animIndex = 0;
 	float m_animTimer = 0.0f;
 	float m_animSpeed = 0.1f;
-	const int IDLE_FRAMES = 2;
+	const int IDLE_FRAMES = 6;
 	const int RUN_FRAMES = 8;
 	const int ATTACK_FRAMES = 6;
 	const int HIGH_ATTACK_FRAMES = 6;
@@ -90,7 +96,7 @@ private:
 	bool  m_isSpecialReserved = false; // 必殺技の発射待ちフラグ
 
 	Math::Vector2 m_vec = {};
-	float m_speed = 3.0f;
+	float m_speed = 5.0f;
 	State m_state = State::Normal;
 	float m_cooldownTimer = 0.0f;
 
@@ -100,7 +106,7 @@ private:
 	static const int MAX_SPECIALBULLETS = 2;
 	PlayerBullet* m_specialBullets[MAX_SPECIALBULLETS] = { nullptr };
 	SpecialBulletType m_specialBulletType = SpecialBulletType::TypeA;
-	KdTexture m_bulletTex;
+	KdTexture m_playerBulletTex;
 
 	const float SPREAD_ANGLE = 15.0f;
 	bool m_isMissionSuccess = false;
@@ -110,4 +116,7 @@ private:
 	bool m_isShotRequested = false;
 	float m_shootCooldown = 0.5f;
 	float m_shootTimer = 0.0f;
+	
+	float m_cutInTimer = 0.0f;     // カットインの経過時間
+	const float CUTIN_DURATION = 1.0f; // カットインを表示する合計時間（秒）
 };
