@@ -1,5 +1,6 @@
 #pragma once
 #include "Application/Object/BaseObject.h"
+#include "Application/Scene.h"
 
 class EnemyBullet;
 
@@ -22,6 +23,7 @@ public:
 			m_isAlive = false;
 			m_animTimer = 0.0f;
 			m_animIndex = 0;
+			SCENE.AddScore(10);
 		}
 	}
 
@@ -36,6 +38,7 @@ protected:
 	void AnimUpdate();
 
 	void ShotBullet(Math::Vector2& pos, float angleRad, float speed, float size);
+	void ShotBullet(Math::Vector2& pos, float angleRad, float speed, float size, int wait);
 
 	float m_speed = 2.0f;
 

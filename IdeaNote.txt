@@ -1,4 +1,6 @@
 ・木の間から敵が撃ってくる
+・ヒットエフェクト
+・テンションに応じて手前で踊る
 
 https://papoycore.itch.io/fairy
 https://incolgames.itch.io/enemycharacterpixelart

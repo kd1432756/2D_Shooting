@@ -30,7 +30,7 @@ void Fairy::Update(Math::Vector2 playerPos)
                 float dy = playerPos.y - m_pos.y;
                 float angleToPlayer = std::atan2(dy, dx);
 
-                ShotBullet(m_pos, angleToPlayer, 15.0f, 0.4f);
+                ShotBullet(m_pos, angleToPlayer, 12.0f, 0.4f);
 
                 m_isShotReady = false;
                 m_hasShoted = true;

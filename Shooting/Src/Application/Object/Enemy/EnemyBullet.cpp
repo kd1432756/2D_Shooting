@@ -9,9 +9,21 @@ void EnemyBullet::Init()
     m_speed = 0.0f;
 }
 
-void EnemyBullet::Update()
+void EnemyBullet::Update(Math::Vector2& playerPos)
 {
     if (!m_isActive) return;
+
+    if (m_moveWait > 0)
+    {
+        m_moveWait--;
+        if (m_moveWait == 0)
+        {
+            float dx = playerPos.x - m_pos.x;
+            float dy = playerPos.y - m_pos.y;
+            m_angleRad = std::atan2(dy, dx);
+        }
+        return;
+    }
 
     m_pos.x += cosf(m_angleRad) * m_speed;
     m_pos.y += sinf(m_angleRad) * m_speed;
@@ -28,6 +40,8 @@ void EnemyBullet::Update()
 
 void EnemyBullet::Draw()
 {
+    if (!m_isActive) return;
+
     Math::Matrix mat =
         Math::Matrix::CreateScale(m_size) *
         Math::Matrix::CreateRotationZ(m_angleRad) * 

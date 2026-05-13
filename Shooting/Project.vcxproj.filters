@@ -70,6 +70,12 @@
     <Filter Include="Src\Application\Object\Enemy\Fairy">
       <UniqueIdentifier>{5a7aadfc-117d-4a50-bfd5-81ef2142c1c2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Src\Application\Object\Enemy\FireWorm">
+      <UniqueIdentifier>{dcfa4fc6-6e3f-4ad7-9933-ee652b8bfeb2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Src\Application\Effect">
+      <UniqueIdentifier>{61aa9456-afdc-4cdd-a582-71767d6aa261}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Pch.h">
@@ -207,6 +213,18 @@
     <ClInclude Include="Src\Application\Object\Enemy\Fairy\Fairy.h">
       <Filter>Src\Application\Object\Enemy\Fairy</Filter>
     </ClInclude>
+    <ClInclude Include="Src\Application\Object\Enemy\FireWorm\FireWorm.h">
+      <Filter>Src\Application\Object\Enemy\FireWorm</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Effect\BaseEffect.h">
+      <Filter>Src\Application\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Effect\HitEffect.h">
+      <Filter>Src\Application\Effect</Filter>
+    </ClInclude>
+    <ClInclude Include="Src\Application\Effect\TensionUpEffect.h">
+      <Filter>Src\Application\Effect</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Pch.cpp">
@@ -313,6 +331,18 @@
     </ClCompile>
     <ClCompile Include="Src\Application\Object\Enemy\Fairy\Fairy.cpp">
       <Filter>Src\Application\Object\Enemy\Fairy</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Object\Enemy\FireWorm\FireWorm.cpp">
+      <Filter>Src\Application\Object\Enemy\FireWorm</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Effect\BaseEffect.cpp">
+      <Filter>Src\Application\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Effect\HitEffect.cpp">
+      <Filter>Src\Application\Effect</Filter>
+    </ClCompile>
+    <ClCompile Include="Src\Application\Effect\TensionUpEffect.cpp">
+      <Filter>Src\Application\Effect</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

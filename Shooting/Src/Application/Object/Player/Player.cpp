@@ -12,12 +12,20 @@ void Player::Init()
 	m_tex.Load("Texture/GameScene/player.png");
 	m_playerBulletTex.Load("Texture/GameScene/player_bullet.png");
 
-	m_pos = { -500, 0 };
+	m_hp = 3;
+
+	m_pos = { -500, -50 };
 	m_vec = {};
 	m_speed = 5.0f;
 	m_animSpeed = 0.1f;
 	m_cooldownTimer = 0.0f;
 	m_shootCooldown = 0.5f;
+
+	m_damageTimer = 0.0f;
+
+	m_tensionUpFlg = false;
+
+	m_landingPointTex.Load("Texture/GameScene/landing_point.png");
 
 	for (auto& bullet : m_specialBullets)
 	{
@@ -34,11 +42,29 @@ void Player::Init()
 	case 1:		m_specialBulletType = SpecialBulletType::TypeB;	break;
 	case 2:		m_specialBulletType = SpecialBulletType::TypeC;	break;
 	}
+
 	m_specialBulletType = SpecialBulletType::TypeC;
+	ChangeHP(1);
 }
 
 void Player::Update()
 {
+	if (GetAsyncKeyState('Q') & 0x8000)
+	{
+		m_specialBulletType = SpecialBulletType::TypeA;
+		m_tensionGauge = 100;
+	}
+	if (GetAsyncKeyState('W') & 0x8000)
+	{
+		m_specialBulletType = SpecialBulletType::TypeB;
+		m_tensionGauge = 100;
+	}
+	if (GetAsyncKeyState('E') & 0x8000)
+	{
+		m_specialBulletType = SpecialBulletType::TypeC;
+		m_tensionGauge = 100;
+	}
+
 	m_vec = {};
 
 	if (m_isAlive)
@@ -197,8 +223,13 @@ void Player::Draw()
 {
 	if (m_state == State::ReadyToShoot || m_state == State::Firing)
 	{
-		Math::Color color(1, 0, 0, 0.5f);
-		if (m_state == State::Firing) color = { 1, 0, 0, 0.2f };
+		float alpha = 0.5f;
+		Math::Color color(1, 0, 0, alpha);
+		if (m_state == State::Firing)
+		{
+			alpha = 0.2f;
+			color = { 1, 0, 0, alpha };
+		}
 
 		switch (m_specialBulletType)
 		{
@@ -235,8 +266,13 @@ void Player::Draw()
 			break;
 		case SpecialBulletType::TypeC:
 
-			SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
-			SHADER.m_spriteShader.DrawCircle(m_pos.x + 700.0f, m_pos.y, 32, &color, true);
+			//SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
+			//SHADER.m_spriteShader.DrawCircle(m_pos.x + 700.0f, m_pos.y, 32, &color, true);
+			Math::Matrix mat =
+				Math::Matrix::CreateScale(0.5f) *
+				Math::Matrix::CreateTranslation(m_pos.x + 700.0f, m_pos.y, 0.0f);
+			SHADER.m_spriteShader.SetMatrix(mat);
+			SHADER.m_spriteShader.DrawTex(&m_landingPointTex, Math::Rectangle{0,0,127,127}, alpha);
 
 			break;
 		}
@@ -269,6 +305,7 @@ void Player::Draw()
 		SHADER.m_spriteShader.SetMatrix(mat);
 		SHADER.m_spriteShader.DrawTex(&m_tex, Math::Rectangle{ 0, playerY, 64, 64 }, alpha);
 	}
+	if (m_damageTimer % 10 <= 5)
 	{
 		int srcX;
 		srcX = m_animIndex * 64;
@@ -318,12 +355,24 @@ void Player::Release()
 			bullet = nullptr;
 		}
 	}
+
+	m_landingPointTex.Release();
 }
 
 void Player::AnimUpdate()
 {
+	if (m_damageTimer > 0)
+	{
+		m_damageTimer -= 1;
+	}
+
 	if (m_state == State::ReadyToShoot)return;
 	if (m_state == State::Firing && m_cutInTimer < CUTIN_DURATION)return;
+
+	if (m_invincivleTimer > 0)
+	{
+		m_invincivleTimer -= 1;
+	}
 
 	m_animTimer += 1.0f / 60.0f;
 
@@ -483,6 +532,7 @@ bool Player::IsFireingFinished()
 		{
 			ChangeHP(1);
 			m_tensionGauge = 0.0f;
+			m_tensionUpFlg = true;
 			switch (rand() % 3)
 			{
 			case 0:		m_specialBulletType = SpecialBulletType::TypeA;	break;
@@ -493,6 +543,7 @@ bool Player::IsFireingFinished()
 		else
 		{
 			m_tensionGauge = 50.0f;
+			if (m_hp >= 9) m_tensionGauge = 0.0f;
 		}
 
 		return true;

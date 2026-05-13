@@ -8,7 +8,10 @@
 #include "Application/Object/Enemy/SkullWolf/SkullWolf.h"
 #include "Application/Object/Enemy/Phoenix/Phoenix.h"
 #include "Application/Object/Enemy/Fairy/Fairy.h"
+#include "Application/Object/Enemy/FireWorm/FireWorm.h"
 #include "Application/Object/Enemy/EnemyBullet.h"
+#include "Application/Effect/HitEffect.h"
+#include "Application/Effect/TensionUpEffect.h"
 
 void GameScene::Init()
 {
@@ -18,7 +21,12 @@ void GameScene::Init()
 	m_BGTex[3].Load("Texture/GameScene/BG03.png");
 
 	m_isDimmingActive = false;
-	m_overlayAlpha = 0.0f;
+	m_overlayAlpha = 1.0f;
+
+	m_changeFlg = false;
+	m_clearFlg = false;
+
+	m_score = 0;
 
 	m_enemySpawnTimer = 0;
 
@@ -74,6 +82,10 @@ void GameScene::Init()
 		}
 	}
 
+	m_fireWormTex.Load("Texture/GameScene/fire_worm.png");
+	m_fireWorm = new FireWorm();
+	m_fireWorm->SetTexture(&m_fireWormTex);
+
 	for (auto& bullet : m_enemyBullets)
 	{
 		if (!bullet)
@@ -87,159 +99,145 @@ void GameScene::Init()
 	m_numberTex.Load("Texture/GameScene/number.png");
 
 	m_nextSpecialTex.Load("Texture/GameScene/nextSpecialIcon.png");
+
+	m_scoreTex.Load("Texture/GameScene/score.png");
+	m_scoreNumberTex.Load("Texture/GameScene/score_number.png");
+
+	m_hitBoxTex.Load("Texture/GameScene/hit_box.png");
+
+	m_resultTex.Load("Texture/GameScene/result.png");
+	m_resultAlpha = 0;
+
+	m_resultEntryTex.Load("Texture/GameScene/entry_result.png");
+	m_resultEntryAlpha = 0;
+
+	m_hitEffectTex.Load("Texture/GameScene/hit_effect.png");
+	for (auto& hitEffect : m_hitEffect)
+	{
+		if (!hitEffect)
+		{
+			hitEffect = new HitEffect();
+			hitEffect->SetTexture(&m_hitEffectTex);
+		}
+	}
+
+	m_tensionUpEffectTex.Load("Texture/GameScene/tension_up_effect.png");
+	m_tensionUpEffect = new TensionUpEffect;
+	m_tensionUpEffect->SetTexture(&m_tensionUpEffectTex);
 }
 
 void GameScene::Update()
 {
-	if (GetAsyncKeyState(VK_RETURN) & 0x8000)
+	if ((GetAsyncKeyState(VK_RETURN) & 0x8000)) SCENE.RequestSceneChange(SceneName::Result);
+
+	if (m_score < SCENE.GetScore()) m_score += 1;
+
+	if (m_clearFlg && !m_fireWorm->IsActive())
 	{
-		SCENE.RequestSceneChange(SceneName::Result);
-	}
+		m_isDimmingActive = true;
 
-	if (GetAsyncKeyState('1') & 0x8000)
-	{
-		m_player->ChangeHP(1);
-	}
-
-	if (GetAsyncKeyState('2') & 0x8000)
-	{
-		m_player->ChangeHP(-1);
-	}
-
-	if (GetAsyncKeyState('3') & 0x8000)
-	{
-		SpawnSlime(0);
-	}
-
-	if (GetAsyncKeyState('4') & 0x8000)
-	{
-		float centerY = (float)(rand() % 400 - 200);
-
-		float minGap = 70.0f;
-		float maxGap = 200.0f;
-
-		float totalGap = minGap + (float)(rand() % (int)(maxGap - minGap));
-
-		float halfGap = totalGap / 2.0f;
-
-		SpawnSlime(centerY + halfGap);
-		SpawnSlime(centerY - halfGap);
-	}
-
-	if (GetAsyncKeyState('5') & 0x8000)
-	{
-		float centerY = (float)(rand() % 400 - 200);
-
-		SpawnSlime(centerY);
-		SpawnSlime(-centerY);
-	}
-
-	if (GetAsyncKeyState('0') & 0x8000)
-	{
-		for (auto& slime : m_slime)
+		if (m_overlayAlpha == 0.8f)
 		{
-			if (slime && slime->IsActive())
+			if (m_resultAlpha < 1) m_resultAlpha += 0.02f;
+			if (m_resultEntryAlpha < 1) m_resultEntryAlpha += 0.01f;
+
+			if (!m_changeFlg)
 			{
-				slime->ChangeHP(-3);
+				if (!(GetAsyncKeyState('Z') & 0x8000)) m_changeFlg = true;
+			}
+			else
+			{
+				if ((GetAsyncKeyState('Z') & 0x8000))
+				{
+					SCENE.SetHP(m_player->GetHp());
+					SCENE.RequestSceneChange(SceneName::Result);
+				}
 			}
 		}
 	}
-
-	m_player->Update();
-
-	HitCheck();
-
-	if (m_player->GetState() == Player::State::ReadyToShoot ||
-		m_player->GetState() == Player::State::Firing ||
-		!m_player->IsAlive())
-	{
-		m_isDimmingActive = true;
-	}
 	else
 	{
-		m_isDimmingActive = false;
-	}
-
-	if (m_player->IsAlive() && m_player->IsShotRequested())
-	{
-		for (auto& bullet : m_playerBullets)
+		if (!m_player->IsAlive() && m_overlayAlpha == 1.0f)
 		{
-			if (bullet && !bullet->IsActive())
+			if (m_resultAlpha < 1) m_resultAlpha += 0.02f;
+			if (m_resultEntryAlpha < 1) m_resultEntryAlpha += 0.01f;
+
+			if (!m_changeFlg)
 			{
-				bullet->SetActive(true);
-				Math::Vector2 pos = m_player->GetPos() + Math::Vector2{ 0.0f,12.0f-12.0f };
-				bullet->SetPosition(pos);
-				bullet->SetAngle(0.0f);
-				break;
+				if (!(GetAsyncKeyState('Z') & 0x8000)) m_changeFlg = true;
 			}
+			else
+			{
+				if ((GetAsyncKeyState('Z') & 0x8000))
+				{
+					SCENE.SetHP(m_player->GetHp());
+					SCENE.RequestSceneChange(SceneName::Result);
+				}
+			}
+		}
+
+		if (GetAsyncKeyState('1') & 0x8000)
+		{
+			m_player->ChangeHP(1);
+		}
+
+		if (GetAsyncKeyState('2') & 0x8000)
+		{
+			m_player->ChangeHP(-1);
+		}
+
+		if (GetAsyncKeyState('0') & 0x8000)
+		{
+			m_enemySpawnTimer = 6000;
+		}
+
+		m_player->Update();
+
+		if (m_player->GetTensionUpFlg())
+		{
+			m_player->SetTensionUpFlg(false);
+			m_tensionUpEffect->Init();
+			m_tensionUpEffect->SetActive(true);
+			m_tensionUpEffect->SetPosition(m_player->GetPos());
+		}
+
+		HitCheck();
+
+		if (m_player->GetState() == Player::State::ReadyToShoot ||
+			m_player->GetState() == Player::State::Firing ||
+			!m_player->IsAlive())
+		{
+			m_isDimmingActive = true;
+		}
+		else
+		{
+			m_isDimmingActive = false;
+		}
+
+		if (m_player->IsAlive() && m_player->IsShotRequested())
+		{
+			for (auto& bullet : m_playerBullets)
+			{
+				if (bullet && !bullet->IsActive())
+				{
+					bullet->SetActive(true);
+					Math::Vector2 pos = m_player->GetPos() + Math::Vector2{ 0.0f,12.0f - 12.0f };
+					bullet->SetPosition(pos);
+					bullet->SetAngle(0.0f);
+					break;
+				}
+			}
+		}
+
+		if (m_fireWorm && m_fireWorm->IsActive() && !m_fireWorm->IsAlive())
+		{
+			m_clearFlg = true;
 		}
 	}
 
 	if (!m_isDimmingActive)
 	{
-		{
-			m_enemySpawnTimer++;
-
-			if (! (m_enemySpawnTimer % 120))
-			{
-				float posY = (float)(rand() % 400 - 200) - 90.0f;
-				SpawnSlime(posY);
-			}
-			if (!(m_enemySpawnTimer % 300))
-			{
-				float posY = (float)(rand() % 400 - 200) - 90.0f + 24.0f;
-				for (auto& skullWolf : m_skullWolf)
-				{
-					if (skullWolf && !skullWolf->IsActive())
-					{
-						skullWolf->Init();
-						skullWolf->SetActive(true);
-						skullWolf->SetAlive(true);
-						skullWolf->SetHP(3);
-						Math::Vector2 pos = { 700, posY };
-						skullWolf->SetPosition(pos);
-						skullWolf->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
-						break;
-					}
-				}
-			}
-			if (!((m_enemySpawnTimer % 300) - 150))
-			{
-				float posY = (float)(rand() % 360 - 180) - 90.0f;
-				for (auto& phoenix : m_phoenix)
-				{
-					if (phoenix && !phoenix->IsActive())
-					{
-						phoenix->Init();
-						phoenix->SetActive(true);
-						phoenix->SetAlive(true);
-						phoenix->SetHP(4);
-						Math::Vector2 pos = { 700, posY };
-						phoenix->SetPosition(pos);
-						phoenix->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
-						break;
-					}
-				}
-			}
-			if (!((m_enemySpawnTimer % 600)))
-			{
-				float posY = 260;
-				for (auto& fairy : m_fairy)
-				{
-					if (fairy && !fairy->IsActive())
-					{
-						fairy->Init();
-						fairy->SetActive(true);
-						fairy->SetAlive(true);
-						fairy->SetHP(1);
-						Math::Vector2 pos = { 700, posY };
-						fairy->SetPosition(pos);
-						fairy->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
-						break;
-					}
-				}
-			}
-		}
+		SpawnEnemy();
 
 		for (auto& bullet : m_playerBullets)
 		{
@@ -281,27 +279,61 @@ void GameScene::Update()
 			}
 		}
 
+		if (m_fireWorm && m_fireWorm->IsActive())
+		{
+			m_fireWorm->Update(m_player->GetPos());
+		}
+
 		for (auto& bullet : m_enemyBullets)
 		{
 			if (bullet && bullet->IsActive())
 			{
-				bullet->Update();
+				bullet->Update(m_player->GetPos());
 			}
 		}
+
+		for (auto& hitEffect : m_hitEffect)
+		{
+			if (hitEffect && hitEffect->IsActive())
+			{
+				hitEffect->Update();
+			}
+		}
+
+		if (m_tensionUpEffect && m_tensionUpEffect->IsActive())
+		{
+			m_tensionUpEffect->Update(m_player->GetPos());
+		}
 	}
-	else if (m_player->IsAlive())
+	else if (!m_player->IsAlive())
 	{
 		// 死亡時
 	}
 	else
 	{
-		// 必殺技時
+		if (m_player->GetState() == Player::State::Firing)
+		{
+			for (auto bullet : m_enemyBullets)
+			{
+				if (bullet && bullet->IsActive())
+				{
+					bullet->SetActive(false);
+				}
+			}
+		}
 	}
 
 	if (m_isDimmingActive) {
 		// 「目標の暗さ(0.7)」と「今の暗さに少し足した値」を比べて、
 		// 小さい方を採用する（＝0.7を超えないようにする）
-		m_overlayAlpha = std::min(m_player->IsAlive() ? 0.7f : 1.0f, m_overlayAlpha + 5.0f * 1.0f / 60.0f);
+		if (m_clearFlg)
+		{
+			m_overlayAlpha = std::min(0.8f, m_overlayAlpha + 5.0f * 0.2f / 60.0f);
+		}
+		else
+		{
+			m_overlayAlpha = std::min(m_player->IsAlive() ? 0.7f : 1.0f, m_overlayAlpha + 5.0f * 1.0f / 60.0f);
+		}
 	}
 	else {
 		// 「0.0」と「今の暗さから少し引いた値」を比べて、
@@ -350,6 +382,12 @@ void GameScene::Draw()
 	SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
 	SHADER.m_spriteShader.DrawBox(0, 0, 1280, 720, &Math::Color(0, 0, 0, m_overlayAlpha));
 
+	if (m_enemySpawnTimer > 6000 && m_enemySpawnTimer < 6240)
+	{
+		float alpha = sinf((m_enemySpawnTimer - 6000.0f) / 10.0f) * 0.2f;
+		SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
+		SHADER.m_spriteShader.DrawBox(0, 0, 1280, 720, &Math::Color(1, 0, 0, alpha));
+	}
 //	SHADER.m_spriteShader.DrawBox(500, -90, 20, 200, &Math::Color(1, 0, 0, 1.0f));
 
 	for (auto& slime : m_slime)
@@ -376,7 +414,25 @@ void GameScene::Draw()
 		}
 	}
 
+	if (m_fireWorm && m_fireWorm->IsActive())
+	{
+		m_fireWorm->Draw();
+	}
+
 	m_player->Draw();
+
+	for (auto& hitEffect : m_hitEffect)
+	{
+		if (hitEffect && hitEffect->IsActive())
+		{
+			hitEffect->Draw();
+		}
+	}
+
+	if (m_tensionUpEffect && m_tensionUpEffect->IsActive())
+	{
+		m_tensionUpEffect->Draw();
+	}
 
 	SHADER.m_spriteShader.SetMatrix(Math::Matrix::CreateScale(1.0f / 3.0f));
 	SHADER.m_spriteShader.DrawTex(&m_BGTex[0], Math::Rectangle{ 0,0,3840,2160 }, 1.0f - m_overlayAlpha);
@@ -471,7 +527,15 @@ void GameScene::Draw()
 		// ゲージ自体の開始X座標（炎アイコンの少し右からスタート）
 		float gaugeStartX = baseX + 50.0f;
 
-		
+		{
+			SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
+			SHADER.m_spriteShader.DrawBox(-360, baseY + 20, 270, 85, &Math::Color{ 0,0,0,0.5f });
+		}
+
+		{
+			SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
+			SHADER.m_spriteShader.DrawBox(380, baseY + 63, 280, 35, &Math::Color{ 0,0,0,0.5f });
+		}
 
 		// --- 3. 背景（一番下の黒い枠） ---
 		{
@@ -511,7 +575,8 @@ void GameScene::Draw()
 			float alpha = 0.6f;
 			float scale = 0.3f;
 
-			if (m_player->GetTensionPercent() >= 1.0f && !m_isDimmingActive)
+			if ((m_player->GetTensionPercent() >= 1.0f && !m_isDimmingActive) ||
+				(m_player->GetHp() >= 9 && !m_isDimmingActive))
 			{
 				alpha = 1.0f;
 				scale = 0.3f + sinf(SCENE.GetFrameCount() * 15.0f) * 0.02f;
@@ -541,13 +606,77 @@ void GameScene::Draw()
 		// --- 6. 次の必殺技アイコン（ゲージの右端：終着点） ---
 		{
 			// ゲージの開始位置からゲージの最大幅分進み、さらに少し右に置く
-			float nextSpecialX = gaugeStartX + (gaugeMaxHalfWidth * 2.0f) + 50.0f;
+			float nextSpecialX = gaugeStartX + (gaugeMaxHalfWidth * 2.0f) + 50.0f + 20.0f;
 
 			Math::Matrix nextSpecialMat =
 				Math::Matrix::CreateScale(2.0f) * Math::Matrix::CreateTranslation(nextSpecialX, baseY, 0);
 			SHADER.m_spriteShader.SetMatrix(nextSpecialMat);
 			SHADER.m_spriteShader.DrawTex(&m_nextSpecialTex, Math::Rectangle{ m_player->GetSpecialBulletType() * 48, 0, 48, 48 }, 1.0f);
 		}
+	}
+	{
+		Math::Matrix mat =
+			Math::Matrix::CreateScale(2.5f, 4.0f, 1.0f) *
+			Math::Matrix::CreateRotationZ(0) *
+			Math::Matrix::CreateTranslation(190, 260 + 60, 0);
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_scoreTex, Math::Rectangle{ 0,0,65,13 }, 1.0f);
+
+		unsigned int tmp = m_score * 100;
+		int m_digits[10];
+		for (int i = 10 - 1; i >= 0; --i)
+		{
+			// 下位の桁から抽出し配列に格納
+			m_digits[i] = tmp % 10;	// 余りを求める演算子 %
+			tmp /= 10;
+
+			Math::Matrix mat =
+				Math::Matrix::CreateScale(2.5f, 4.0f, 1.0f) *
+				Math::Matrix::CreateRotationZ(0) *
+				Math::Matrix::CreateTranslation(320 + i * 13 * 2.5f, 260 + 60, 0);
+			SHADER.m_spriteShader.SetMatrix(mat);
+			SHADER.m_spriteShader.DrawTex(&m_scoreNumberTex, Math::Rectangle{ m_digits[i] * 13,0,13,13 }, 1.0f);
+		}
+	}
+
+	if(m_clearFlg && !m_fireWorm->IsActive())
+	{
+		Math::Rectangle rc = { 0, 0, 90, 13 };
+		Math::Matrix mat =
+			Math::Matrix::CreateScale(6.0f) *
+			Math::Matrix::CreateRotationZ(0)*
+			Math::Matrix::CreateTranslation(0, 100, 0);
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_resultTex, rc, m_resultAlpha);
+		
+		rc = { 0, 0, 112, 26 };
+		m_resultEntryScale = 4.0f + sinf(SCENE.GetFrameCount() * 0.02f) * 0.2f;
+		mat =
+			Math::Matrix::CreateScale(m_resultEntryScale) *
+			Math::Matrix::CreateRotationZ(0) *
+			Math::Matrix::CreateTranslation(0, -220, 0);
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_resultEntryTex, rc, m_resultAlpha);
+	}
+
+	if(!m_player->IsAlive() && m_overlayAlpha == 1.0f)
+	{
+		Math::Rectangle rc = { 0, 13, 90, 13 };
+		Math::Matrix mat =
+			Math::Matrix::CreateScale(6.0f) *
+			Math::Matrix::CreateRotationZ(0)*
+			Math::Matrix::CreateTranslation(0, 100, 0);
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_resultTex, rc, m_resultAlpha);
+
+		rc = { 0, 0, 112, 26 };
+		m_resultEntryScale = 4.0f + sinf(SCENE.GetFrameCount() * 0.02f) * 0.2f;
+		mat =
+			Math::Matrix::CreateScale(m_resultEntryScale) *
+			Math::Matrix::CreateRotationZ(0) *
+			Math::Matrix::CreateTranslation(0, -220, 0);
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_resultEntryTex, rc, m_resultAlpha);
 	}
 
 	/*for(auto& enemy : m_phoenix)
@@ -560,11 +689,15 @@ void GameScene::Draw()
 	}*/
 
 	
-		if (m_player->IsActive()) 
-		{
-			SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
-			SHADER.m_spriteShader.DrawCircle(m_player->GetPos().x, m_player->GetPos().y, 8, &Math::Color(1, 0, 0, 1.0f));
-		}
+	if (m_player->IsAlive() && !m_isDimmingActive)
+	{
+		SHADER.m_spriteShader.SetMatrix(Math::Matrix::Identity);
+		Math::Matrix mat =
+			Math::Matrix::CreateScale(0.5f) *
+			Math::Matrix::CreateTranslation(m_player->GetPos().x, m_player->GetPos().y, 0);
+		SHADER.m_spriteShader.SetMatrix(mat);
+		SHADER.m_spriteShader.DrawTex(&m_hitBoxTex, Math::Rectangle{ 0,0,32,32 }, 0.2f);
+	}
 	
 }
 
@@ -631,6 +764,10 @@ void GameScene::Release()
 		}
 	}
 
+	m_fireWormTex.Release();
+	delete m_fireWorm;
+	m_fireWorm = nullptr;
+
 	for (auto& bullet : m_enemyBullets)
 	{
 		if (bullet)
@@ -643,18 +780,88 @@ void GameScene::Release()
 	m_fireTex.Release();
 	m_numberTex.Release();
 	m_nextSpecialTex.Release();
+
+	m_scoreTex.Release();
+	m_scoreNumberTex.Release();
+
+	m_hitBoxTex.Release();
+
+	m_resultTex.Release();
+	m_resultEntryTex.Release();
+
+	m_hitEffectTex.Release();
+	for (auto& hitEffect : m_hitEffect)
+	{
+		if (hitEffect)
+		{
+			delete hitEffect;
+			hitEffect = nullptr;
+		}
+	}
+
+	m_tensionUpEffectTex.Release();
+	if (m_tensionUpEffect)
+	{
+		delete m_tensionUpEffect;
+		m_tensionUpEffect = nullptr;
+	}
 }
 
 void GameScene::HitCheck()
 {
+	// ========== 敵と自機 ==========
+
+	if (!m_player->IsInvincible())
 	{
-		for (auto& bullet : m_enemyBullets)
+		for (auto& slime : m_slime)
 		{
-			if (!bullet->IsActive())continue;
-			if (m_hit->CheckCircle(bullet->GetPos(), 16.0f * bullet->GetSize(), m_player->GetPos(), 8))
+			if (!slime->IsActive())continue;
+			if (!slime->IsAlive())continue;
+
+			if (m_hit->CheckCircle(slime->GetPos(), 16.0f, m_player->GetPos(), 8))
 			{
 				m_player->ChangeHP(-1);
-				bullet->SetActive(false);
+				m_player->SetDamageTimer(55);
+			}
+		}
+		for (auto& skullWolf : m_skullWolf)
+		{
+			if (!skullWolf->IsActive())continue;
+			if (!skullWolf->IsAlive())continue;
+
+			if (m_hit->CheckCircle(skullWolf->GetPos() + Math::Vector2{ 0,-24 }, 24.0f, m_player->GetPos(), 8))
+			{
+				m_player->ChangeHP(-1);
+				m_player->SetDamageTimer(55);
+			}
+		}
+		for (auto& phoenix : m_phoenix)
+		{
+			if (!phoenix->IsActive())continue;
+			if (!phoenix->IsAlive())continue;
+
+			if (m_hit->CheckCircle(phoenix->GetPos(), 24.0f, m_player->GetPos(), 8))
+			{
+				m_player->ChangeHP(-1);
+				m_player->SetDamageTimer(55);
+			}
+		}
+	}
+
+	// ========== 敵の弾 ==========
+
+	{
+		if (!m_player->IsInvincible())
+		{
+			for (auto& bullet : m_enemyBullets)
+			{
+				if (!bullet->IsActive())continue;
+				if (m_hit->CheckCircle(bullet->GetPos(), 16.0f * bullet->GetSize(), m_player->GetPos(), 8))
+				{
+					m_player->ChangeHP(-1);
+					m_player->SetDamageTimer(55);
+					bullet->SetActive(false);
+				}
 			}
 		}
 	}
@@ -674,6 +881,9 @@ void GameScene::HitCheck()
 					slime->GetPos(), 64, 24))
 				{
 					slime->ChangeHP(-1);
+					m_player->AddTension(1);
+					SCENE.AddScore(1);
+					CreateHitEffect(bullet->GetPos(), 1.0f);
 					bullet->SetActive(false);
 					if (!slime->IsAlive())
 					{
@@ -690,6 +900,9 @@ void GameScene::HitCheck()
 					skullWolf->GetPos() + Math::Vector2{ 0,-24 }, 96, 48))
 				{
 					skullWolf->ChangeHP(-1);
+					m_player->AddTension(1);
+					SCENE.AddScore(1);
+					CreateHitEffect(bullet->GetPos(), 1.0f);
 					bullet->SetActive(false);
 					if (!skullWolf->IsAlive())
 					{
@@ -706,10 +919,31 @@ void GameScene::HitCheck()
 					phoenix->GetPos(), 48, 48))
 				{
 					phoenix->ChangeHP(-1);
+					m_player->AddTension(1);
+					SCENE.AddScore(1);
+					CreateHitEffect(bullet->GetPos(), 1.0f);
 					bullet->SetActive(false);
 					if (!phoenix->IsAlive())
 					{
 						m_player->AddTension(10);
+					}
+				}
+			}
+			{
+				if (!m_fireWorm->IsActive())continue;
+				if (!m_fireWorm->IsAlive())continue;
+
+				if (m_hit->CheckRect(bullet->GetPos(), 32, 10,
+					m_fireWorm->GetPos(), 240-20, 160))
+				{
+					m_fireWorm->ChangeHP(-1);
+					m_player->AddTension(2);
+					SCENE.AddScore(1);
+					CreateHitEffect(bullet->GetPos(), 1.0f);
+					bullet->SetActive(false);
+					if (!m_fireWorm->IsAlive())
+					{
+
 					}
 				}
 			}
@@ -736,6 +970,8 @@ void GameScene::HitCheck()
 					{
 						slime->ChangeHP(-100);
 						bullet->IncrementKillCount();
+						SCENE.AddScore(10);
+						CreateHitEffect(bullet->GetPos(), 2.0f);
 					}
 				}
 				else
@@ -745,6 +981,8 @@ void GameScene::HitCheck()
 					{
 						slime->ChangeHP(-100);
 						bullet->IncrementKillCount();
+						SCENE.AddScore(10);
+						CreateHitEffect(bullet->GetPos(), 2.0f);
 					}
 				}
 			}
@@ -759,6 +997,8 @@ void GameScene::HitCheck()
 					{
 						skullWolf->ChangeHP(-100);
 						bullet->IncrementKillCount();
+						SCENE.AddScore(10);
+						CreateHitEffect(bullet->GetPos(), 2.0f);
 					}
 				}
 				else
@@ -768,6 +1008,8 @@ void GameScene::HitCheck()
 					{
 						skullWolf->ChangeHP(-100);
 						bullet->IncrementKillCount();
+						SCENE.AddScore(10);
+						CreateHitEffect(bullet->GetPos(), 2.0f);
 					}
 				}
 			}
@@ -782,6 +1024,8 @@ void GameScene::HitCheck()
 					{
 						phoenix->ChangeHP(-100);
 						bullet->IncrementKillCount();
+						SCENE.AddScore(10);
+						CreateHitEffect(bullet->GetPos(), 2.0f);
 					}
 				}
 				else
@@ -791,26 +1035,151 @@ void GameScene::HitCheck()
 					{
 						phoenix->ChangeHP(-100);
 						bullet->IncrementKillCount();
+						SCENE.AddScore(10);
+						CreateHitEffect(bullet->GetPos(), 2.0f);
 					}
+				}
+			}
+			if (!m_fireWorm->IsActive())continue;
+			if (!m_fireWorm->IsAlive())continue;
+			if (bullet->GetBulletType() == PlayerBullet::BulletType::Parabola)
+			{
+				if (!bullet->IsHitActive())continue;
+				if (m_hit->CheckCircle(bullet->GetPos(), 32, m_fireWorm->GetPos(), 120))
+				{
+					m_fireWorm->ChangeHP(-50);
+					bullet->IncrementKillCount();
+					SCENE.AddScore(50);
+					CreateHitEffect(bullet->GetPos(), 3.0f);
+				}
+			}
+			else
+			{
+				if (m_hit->CheckRect(bullet->GetPos(), 32, 10,
+					m_fireWorm->GetPos(), 240, 160))
+				{
+					m_fireWorm->ChangeHP(-5);
+					sBullets[0]->IncrementKillCount();
+					sBullets[1]->IncrementKillCount();
+					SCENE.AddScore(5);
+					CreateHitEffect(bullet->GetPos(), 1.5f);
 				}
 			}
 		}
 	}
 }
 
-void GameScene::SpawnSlime(float posY)
+void GameScene::SpawnEnemy()
 {
-	for (auto& slime : m_slime)
+	m_enemySpawnTimer++;
+	
+	if (m_enemySpawnTimer < 6000)
 	{
-		if (slime && !slime->IsActive())
+		if (!(m_enemySpawnTimer % 120))
 		{
-			slime->Init();
-			slime->SetActive(true);
-			slime->SetAlive(true);
-			slime->SetHP(2);
-			Math::Vector2 pos = { 700, posY };
-			slime->SetPosition(pos);
-			slime->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
+			float posY = (float)(rand() % 400 - 200) - 90.0f;
+			for (auto& slime : m_slime)
+			{
+				if (slime && !slime->IsActive())
+				{
+					slime->Init();
+					slime->SetActive(true);
+					slime->SetAlive(true);
+					slime->SetHP(2);
+					Math::Vector2 pos = { 700, posY };
+					slime->SetPosition(pos);
+					slime->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
+					break;
+				}
+			}
+		}
+		if (!(m_enemySpawnTimer % 300))
+		{
+			if (m_enemySpawnTimer > 300)
+			{
+				float posY = (float)(rand() % 400 - 200) - 90.0f + 24.0f;
+				for (auto& skullWolf : m_skullWolf)
+				{
+					if (skullWolf && !skullWolf->IsActive())
+					{
+						skullWolf->Init();
+						skullWolf->SetActive(true);
+						skullWolf->SetAlive(true);
+						skullWolf->SetHP(3);
+						Math::Vector2 pos = { 700, posY };
+						skullWolf->SetPosition(pos);
+						skullWolf->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
+						break;
+					}
+				}
+			}
+		}
+		if (!(m_enemySpawnTimer % 480))
+		{
+			if (m_enemySpawnTimer > 480)
+			{
+				float posY = (float)(rand() % 360 - 180) - 90.0f;
+				for (auto& phoenix : m_phoenix)
+				{
+					if (phoenix && !phoenix->IsActive())
+					{
+						phoenix->Init();
+						phoenix->SetActive(true);
+						phoenix->SetAlive(true);
+						phoenix->SetHP(4);
+						Math::Vector2 pos = { 700, posY };
+						phoenix->SetPosition(pos);
+						phoenix->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
+						break;
+					}
+				}
+			}
+		}
+		if (!((m_enemySpawnTimer % 900)))
+		{
+			float posY = 260;
+			for (auto& fairy : m_fairy)
+			{
+				if (fairy && !fairy->IsActive())
+				{
+					fairy->Init();
+					fairy->SetActive(true);
+					fairy->SetAlive(true);
+					fairy->SetHP(1);
+					Math::Vector2 pos = { 700, posY };
+					fairy->SetPosition(pos);
+					fairy->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
+					break;
+				}
+			}
+		}
+	}
+	else
+	{
+		if (m_fireWorm && !m_fireWorm->IsActive() && !m_fireWorm->IsAlive())
+		{
+			m_fireWorm->Init();
+			m_fireWorm->SetActive(true);
+			m_fireWorm->SetAlive(true);
+			m_fireWorm->SetHP(350);
+			Math::Vector2 pos = { 850, -50 };
+			m_fireWorm->SetPosition(pos);
+			m_fireWorm->SetEnemyBulletPool(m_enemyBullets, MAX_ENEMY_BULLETS);
+		}
+	}
+}
+
+void GameScene::CreateHitEffect(Math::Vector2& _pos, float _size)
+{
+	for (auto& hitEffect : m_hitEffect)
+	{
+		if (hitEffect && !hitEffect->IsActive())
+		{
+			Math::Vector2 pos = _pos + Math::Vector2{ 16, 0 };
+			hitEffect->Init();
+			hitEffect->SetActive(true);
+			hitEffect->SetPosition(pos);
+			hitEffect->SetSize(_size);
 			break;
 		}
 	}

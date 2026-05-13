@@ -37,6 +37,9 @@ private:
 	static const int WindowWidth = 1280;
 	static const int WindowHeight = 720;
 
+	int m_hp;
+	int m_score;
+
 public:
 
 	// èâä˙ê›íË
@@ -61,6 +64,14 @@ public:
 	Math::Vector2 GetWindowHalfSize() { return Math::Vector2(WindowWidth / 2, WindowHeight / 2); }
 
 	int GetFrameCount() { return frameCount; }
+
+	int GetHP() { return m_hp; }
+	int GetScore() { return m_score; }
+
+	void SetHP(int hp) { m_hp = hp; }
+
+	void AddScore(int score) { m_score += score; }
+
 
 private:
 

@@ -41,13 +41,28 @@ public:
 		return false;
 	}
 
-	void AddTension(float amount) {
+	void AddTension(float amount) 
+	{
 		m_tensionGauge = std::min(MAX_TENSION, m_tensionGauge + amount);
 	}
 
 	float GetTensionPercent() { return m_tensionGauge / MAX_TENSION; }
 
 	void ChangeHP(int amount);
+
+	void SetDamageTimer(int time)
+	{
+		if (m_isAlive)
+		{
+			m_damageTimer = time;
+			m_invincivleTimer = time;
+		}
+	}
+
+	bool IsInvincible()
+	{
+		return m_invincivleTimer > 0;
+	}
 
 	int GetHp() { return m_hp; }
 
@@ -56,6 +71,9 @@ public:
 	int GetSpecialBulletsMax() { return MAX_SPECIALBULLETS; }
 
 	int GetSpecialBulletType() { return (int)m_specialBulletType; }
+
+	void SetTensionUpFlg(bool flg) { m_tensionUpFlg = flg; }
+	bool GetTensionUpFlg() { return m_tensionUpFlg; }
 
 private:
 
@@ -92,6 +110,9 @@ private:
 	const int DEATH_FRAMES = 10;
 	int m_maxFrames = IDLE_FRAMES;
 
+	int m_damageTimer = 0.0f;
+	int m_invincivleTimer = 0.0f;
+
 	bool  m_isAnimShotDone = false;    // 現在のアニメ中で既に弾を出したか
 	bool  m_isSpecialReserved = false; // 必殺技の発射待ちフラグ
 
@@ -119,4 +140,8 @@ private:
 	
 	float m_cutInTimer = 0.0f;     // カットインの経過時間
 	const float CUTIN_DURATION = 1.0f; // カットインを表示する合計時間（秒）
+
+	bool m_tensionUpFlg = false;
+
+	KdTexture m_landingPointTex;
 };

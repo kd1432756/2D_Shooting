@@ -14,10 +14,6 @@ void Scene::Draw2D()
 
 void Scene::Update()
 {
-	frameCount++;
-
-	m_nowScene->Update();
-
 	if(m_isTransitioning)
 	{
 		m_transitionProgress += TRANSITION_SPEED;
@@ -28,6 +24,10 @@ void Scene::Update()
 			ExecuteSceneChange();
 		}
 	}
+
+	frameCount++;
+
+	m_nowScene->Update();
 }
 
 void Scene::Init()
@@ -43,6 +43,8 @@ void Scene::Init()
 
 	m_nowScene = new TitleScene();
 
+	m_score = 0;
+
 	m_transitionTex.Load("Texture/transition.png");
 }
 
@@ -56,6 +58,7 @@ void Scene::Release()
 
 void Scene::ImGuiUpdate()
 {
+	return;
 	ImGui::SetNextWindowPos(ImVec2(20, 20), ImGuiSetCond_Once);
 	ImGui::SetNextWindowSize(ImVec2(200, 100), ImGuiSetCond_Once);
 
@@ -89,6 +92,7 @@ void Scene::ExecuteSceneChange()
 	
 	case SceneName::Game:
 		m_nowScene = new GameScene();
+		m_score = 0;
 		break;
 	
 	case SceneName::Result:
